@@ -7,6 +7,10 @@ import tqdm
 import torch.optim.lr_scheduler as lr_sched
 import math
 
+import example.utility.bypass_bn  as bp
+import example.model.smooth_cross_entropy as sm
+from sam import SAM
+
 
 logging.getLogger(__name__).addHandler(logging.StreamHandler())
 cur_logger = logging.getLogger(__name__)
@@ -124,16 +128,31 @@ class Trainer(object):
         self.lr_warmup_scheduler = lr_warmup_scheduler
         self.warmup_epoch = warmup_epoch
         self.grad_norm_clip = grad_norm_clip
+        # base_optimizer = torch.optim.SGD
+        # self.optimizer = SAM(model.parameters(), base_optimizer, lr=0.002, momentum=0.9)
 
-    def _train_it(self, batch):
-        self.model.train()
-
+    def _train_it(self, batch):   # batch ...input
+        #print('::::::::::::::::::train_it:::::::::::::::::::::::')
+        self.model.train() # 順伝播 (output)
         self.optimizer.zero_grad()
         loss, tb_dict, disp_dict = self.model_fn(self.model, batch)
-
         loss.backward()
         clip_grad_norm_(self.model.parameters(), self.grad_norm_clip)
         self.optimizer.step()
+        
+        
+        # # first forward-backward step
+        # bp.enable_running_stats(self.model)  # <- this is the important line
+        # self.model.train() # 順伝播 (output)
+        # loss, tb_dict, disp_dict = self.model_fn(self.model, batch)
+        # loss.mean().backward()
+        # print(self.optimizer)
+        # self.optimizer.first_step(zero_grad=True)
+
+        # # second forward-backward step
+        # bp.disable_running_stats(self.model)  # <- this is the important line
+        # loss.mean().backward()
+        # self.optimizer.second_step(zero_grad=True)
 
         return loss.item(), tb_dict, disp_dict
 
@@ -170,7 +189,7 @@ class Trainer(object):
     def train(self, start_it, start_epoch, n_epochs, train_loader, test_loader=None, ckpt_save_interval=5,
               lr_scheduler_each_iter=False):
         eval_frequency = self.eval_frequency if self.eval_frequency > 0 else 1
-
+        #print(':::::::::::::::::::train:::::::::::::::::::::::')
         it = start_it
         with tqdm.trange(start_epoch, n_epochs, desc='epochs') as tbar, \
                 tqdm.tqdm(total=len(train_loader), leave=False, desc='train') as pbar:

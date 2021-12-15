@@ -9,7 +9,7 @@ from lib.config import cfg
 
 import lib.utils.kitti_utils as kitti_utils
 import lib.utils.roipool3d.roipool3d_utils as roipool3d_utils
-
+from tensorboardX import SummaryWriter
 
 class RCNNNet(nn.Module):
     def __init__(self, num_classes, input_channels=0, use_xyz=True):
@@ -120,7 +120,11 @@ class RCNNNet(nn.Module):
         if cfg.RCNN.ROI_SAMPLE_JIT:
             if self.training:
                 with torch.no_grad():
+                    #print(':::::::::::::training::::::::::::::::::::::::')
                     target_dict = self.proposal_target_layer(input_data)
+                    # writer_graph = SummaryWriter(log_dir="./backbone_net_Mish")    
+                    # writer_graph.add_graph(self.proposal_target_layer, target_dict)
+                    # writer_graph.close()
 
                 pts_input = torch.cat((target_dict['sampled_pts'], target_dict['pts_feature']), dim=2)
                 target_dict['pts_input'] = pts_input
@@ -165,8 +169,12 @@ class RCNNNet(nn.Module):
         xyz, features = self._break_up_pc(pts_input)
 
         if cfg.RCNN.USE_RPN_FEATURES:
+            #print('::::::::::::::RPN_FEATURES::::::::::::::::::::::')
             xyz_input = pts_input[..., 0:self.rcnn_input_channel].transpose(1, 2).unsqueeze(dim=3)
             xyz_feature = self.xyz_up_layer(xyz_input)
+            # writer_graph = SummaryWriter(log_dir="./xyz_up_layer_Mish")    
+            # writer_graph.add_graph(self.xyz_up_layer, xyz_input)
+            # writer_graph.close()
 
             rpn_feature = pts_input[..., self.rcnn_input_channel:].transpose(1, 2).unsqueeze(dim=3)
 

@@ -1,11 +1,13 @@
 import torch.nn as nn
 import torch.nn.functional as F
+import torch
 import numpy as np
 from lib.rpn.proposal_layer import ProposalLayer
 import pointnet2_lib.pointnet2.pytorch_utils as pt_utils
 import lib.utils.loss_utils as loss_utils
 from lib.config import cfg
 import importlib
+from tensorboardX import SummaryWriter
 
 
 class RPN(nn.Module):
@@ -72,9 +74,26 @@ class RPN(nn.Module):
         """
         pts_input = input_data['pts_input']
         backbone_xyz, backbone_features = self.backbone_net(pts_input)  # (B, N, 3), (B, C, N)
+        
+        #writer_graph = SummaryWriter(log_dir="./backbone_net_def")
+        # writer_graph = SummaryWriter(log_dir="./backbone_net_se")
+        # writer_graph = SummaryWriter(log_dir="./backbone_net_FReLU")
+        #writer_graph = SummaryWriter(log_dir="./backbone_net_se_Mish")
+        # writer_graph.add_graph(self.backbone_net, pts_input)
+        # writer_graph.close()
 
         rpn_cls = self.rpn_cls_layer(backbone_features).transpose(1, 2).contiguous()  # (B, N, 1)
+        # writer_graph = SummaryWriter(log_dir="./rpn_cls_layer")
+        # writer_graph = SummaryWriter(log_dir="./rpn_cls_layer_Mish")
+        # writer_graph.add_graph(self.rpn_cls_layer, torch.randn(128,128,3).cuda())
+        # writer_graph.close()
+
         rpn_reg = self.rpn_reg_layer(backbone_features).transpose(1, 2).contiguous()  # (B, N, C)
+        # writer_graph = SummaryWriter(log_dir="./rpn_reg_layer")
+        # writer_graph = SummaryWriter(log_dir="./rpn_reg_layer_Mish")
+        # writer_graph.add_graph(self.rpn_reg_layer, torch.randn(128,128,3).cuda())
+        # writer_graph.close()
+        
 
         ret_dict = {'rpn_cls': rpn_cls, 'rpn_reg': rpn_reg,
                     'backbone_xyz': backbone_xyz, 'backbone_features': backbone_features}

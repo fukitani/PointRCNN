@@ -64,7 +64,7 @@ __C.RPN.REG_FC = [128]
 __C.RPN.DP_RATIO = 0.5
 
 # config of training
-__C.RPN.LOSS_CLS = 'DiceLoss'
+__C.RPN.LOSS_CLS = 'DiceLoss'    #'DiceLoss'
 __C.RPN.FG_WEIGHT = 15
 __C.RPN.FOCAL_ALPHA = [0.25, 0.75]
 __C.RPN.FOCAL_GAMMA = 2.0
@@ -121,7 +121,7 @@ __C.RCNN.CLS_FC = [256, 256]
 __C.RCNN.REG_FC = [256, 256]
 
 # config of training
-__C.RCNN.LOSS_CLS = 'BinaryCrossEntropy'
+__C.RCNN.LOSS_CLS = 'BinaryCrossEntropy'  #'BinaryCrossEntropy'
 __C.RCNN.FOCAL_ALPHA = [0.25, 0.75]
 __C.RCNN.FOCAL_GAMMA = 2.0
 __C.RCNN.CLS_WEIGHT = np.array([1.0, 1.0, 1.0], dtype=np.float32)
@@ -147,7 +147,7 @@ __C.TRAIN.LR = 0.002
 __C.TRAIN.LR_CLIP = 0.00001
 __C.TRAIN.LR_DECAY = 0.5
 __C.TRAIN.DECAY_STEP_LIST = [50, 100, 150, 200, 250, 300]
-__C.TRAIN.LR_WARMUP = False
+__C.TRAIN.LR_WARMUP = False   # False
 __C.TRAIN.WARMUP_MIN = 0.0002
 __C.TRAIN.WARMUP_EPOCH = 5
 
@@ -156,7 +156,7 @@ __C.TRAIN.BN_DECAY = 0.5
 __C.TRAIN.BNM_CLIP = 0.01
 __C.TRAIN.BN_DECAY_STEP_LIST = [50, 100, 150, 200, 250, 300]
 
-__C.TRAIN.OPTIMIZER = 'adam'
+__C.TRAIN.OPTIMIZER = 'adam_onecycle'
 __C.TRAIN.WEIGHT_DECAY = 0.0  # "L2 regularization coeff [default: 0.0]"
 __C.TRAIN.MOMENTUM = 0.9
 

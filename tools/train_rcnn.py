@@ -1,6 +1,7 @@
 import _init_path
 import torch
 import torch.optim as optim
+import torch_optimizer as optim2
 import torch.optim.lr_scheduler as lr_sched
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -17,6 +18,9 @@ from lib.config import cfg, cfg_from_file, save_config_to_file
 import tools.train_utils.train_utils as train_utils
 from tools.train_utils.fastai_optim import OptimWrapper
 from tools.train_utils import learning_schedules_fastai as lsf
+
+from sam import SAM
+
 
 
 parser = argparse.ArgumentParser(description="arg parser")
@@ -88,11 +92,19 @@ def create_dataloader(logger):
 def create_optimizer(model):
 
     if cfg.TRAIN.OPTIMIZER == 'adam':
+        print('::::::::::::::::Adam::::::::::::::::::::::::::')
         optimizer = optim.Adam(model.parameters(), lr=cfg.TRAIN.LR, weight_decay=cfg.TRAIN.WEIGHT_DECAY)
+
     elif cfg.TRAIN.OPTIMIZER == 'sgd':
-        optimizer = optim.SGD(model.parameters(), lr=cfg.TRAIN.LR, weight_decay=cfg.TRAIN.WEIGHT_DECAY,
-                              momentum=cfg.TRAIN.MOMENTUM)
+        print(':::::::::::::::::::::SGD:::::::::::::::::::::::')
+        optimizer = optim.SGD(model.parameters(), lr=cfg.TRAIN.LR, weight_decay=cfg.TRAIN.WEIGHT_DECAY, momentum=cfg.TRAIN.MOMENTUM)
+
+    elif cfg.TRAIN.OPTIMIZER == 'radam':
+        print(':::::::::::::::::RAdam:::::::::::::::::::::::::')
+        optimizer = optim2.RAdam(model.parameters(), lr=cfg.TRAIN.LR, weight_decay=cfg.TRAIN.WEIGHT_DECAY)
+
     elif cfg.TRAIN.OPTIMIZER == 'adam_onecycle':
+        print(';;;;;;;;;;;;;;;;;;;;;;;;;adam_onecycle;;;;;;;;;;;;;;;;;;;;;;;;')
         def children(m: nn.Module):
             return list(m.children())
 
@@ -162,7 +174,7 @@ if __name__ == "__main__":
         root_result_dir = os.path.join('../', 'output', 'rcnn', cfg.TAG)
     else:
         raise NotImplementedError
-
+   
     if args.output_dir is not None:
         root_result_dir = args.output_dir
     os.makedirs(root_result_dir, exist_ok=True)
@@ -181,22 +193,28 @@ if __name__ == "__main__":
     save_config_to_file(cfg, logger=logger)
 
     # copy important files to backup
-    backup_dir = os.path.join(root_result_dir, 'backup_files')
-    os.makedirs(backup_dir, exist_ok=True)
-    os.system('cp *.py %s/' % backup_dir)
-    os.system('cp ../lib/net/*.py %s/' % backup_dir)
-    os.system('cp ../lib/datasets/kitti_rcnn_dataset.py %s/' % backup_dir)
+    # backup_dir = os.path.join(root_result_dir, 'backup_files')
+    # os.makedirs(backup_dir, exist_ok=True)
+    # os.system('cp *.py %s/' % backup_dir)
+    # os.system('cp ../lib/net/*.py %s/' % backup_dir)
+    # os.system('cp ../lib/datasets/kitti_rcnn_dataset.py %s/' % backup_dir)
 
     # tensorboard log
     tb_log = SummaryWriter(log_dir=os.path.join(root_result_dir, 'tensorboard'))
-
+    
     # create dataloader & network & optimizer
     train_loader, test_loader = create_dataloader(logger)
     model = PointRCNN(num_classes=train_loader.dataset.num_class, use_xyz=True, mode='TRAIN')
-    optimizer = create_optimizer(model)
+    optimizer = create_optimizer(model)   # default
+
+    # SAM 
+    #base_optimizer = create_optimizer(model)
+    # base_optimizer = torch.optim.SGD
+    # optimizer = SAM(model.parameters(), base_optimizer, lr=0.002, momentum=0.9)
+
 
     if args.mgpus:
-        model = nn.DataParallel(model)
+       model = nn.DataParallel(model)
     model.cuda()
 
     # load checkpoint if it is possible
@@ -220,7 +238,6 @@ if __name__ == "__main__":
                                                       eta_min=cfg.TRAIN.WARMUP_MIN)
     else:
         lr_warmup_scheduler = None
-
     # start training
     logger.info('**********************Start training**********************')
     ckpt_dir = os.path.join(root_result_dir, 'ckpt')
@@ -248,6 +265,7 @@ if __name__ == "__main__":
         test_loader,
         ckpt_save_interval=args.ckpt_save_interval,
         lr_scheduler_each_iter=(cfg.TRAIN.OPTIMIZER == 'adam_onecycle')
+        
     )
 
     logger.info('**********************End training**********************')

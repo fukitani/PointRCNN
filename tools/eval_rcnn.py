@@ -257,6 +257,7 @@ def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
     np.random.seed(1024)
     MEAN_SIZE = torch.from_numpy(cfg.CLS_MEAN_SIZE[0]).cuda()
     mode = 'TEST' if args.test else 'EVAL'
+    
 
     final_output_dir = os.path.join(result_dir, 'final_result', 'data')
     os.makedirs(final_output_dir, exist_ok=True)
@@ -800,11 +801,11 @@ def repeat_eval_ckpt(root_result_dir, ckpt_dir):
     model.cuda()
 
     # copy important files to backup
-    backup_dir = os.path.join(root_result_dir, 'backup_files')
-    os.makedirs(backup_dir, exist_ok=True)
-    os.system('cp *.py %s/' % backup_dir)
-    os.system('cp ../lib/net/*.py %s/' % backup_dir)
-    os.system('cp ../lib/datasets/kitti_rcnn_dataset.py %s/' % backup_dir)
+    # backup_dir = os.path.join(root_result_dir, 'backup_files')
+    # os.makedirs(backup_dir, exist_ok=True)
+    # os.system('cp *.py %s/' % backup_dir)
+    # os.system('cp ../lib/net/*.py %s/' % backup_dir)
+    # os.system('cp ../lib/datasets/kitti_rcnn_dataset.py %s/' % backup_dir)
 
     # evaluated ckpt record
     ckpt_record_file = os.path.join(root_result_dir, 'eval_list_%s.txt' % cfg.TEST.SPLIT)
@@ -899,4 +900,8 @@ if __name__ == "__main__":
             assert os.path.exists(ckpt_dir), '%s' % ckpt_dir
             repeat_eval_ckpt(root_result_dir, ckpt_dir)
         else:
+            import time
+            start = time.time()
             eval_single_ckpt(root_result_dir)
+    elapsed_time = time.time() - start
+    print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
