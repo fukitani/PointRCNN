@@ -180,11 +180,17 @@ All the codes supported **mutiple GPUs**, simply add the `--mgpus` argument as a
 ## Tensorboard 手順 ##
 
 * loss, 学習率など　(PointRCNN/tools ディレクトリにいるとき)
-```tensorboard --logdir ../output/rpn/default/tensorboard```
-```tensorboard --logdir ../output/rcnn/default/tensorboard```
+```
+tensorboard --logdir ../output/rpn/default/tensorboard
+```
+```
+tensorboard --logdir ../output/rcnn/default/tensorboard
+```
 
 * ネットワークモデル (PointRCNN/tools ディレクトリにいるとき)
-```tensorboard --logdir ./backbone_net_def```
+```
+tensorboard --logdir ./backbone_net_def
+```
 backbone_net_def, backbone_net_Mish, backbone_net_FReLU, backbone_net_se, backbone_net_se_Mish
 rpn_cls_layer, rpn_cls_layer_Mish, rpn_reg_layer, rpn_reg_layer_Mishなど
 
