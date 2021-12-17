@@ -105,9 +105,14 @@ python eval_rcnn.py --cfg_file cfgs/default.yaml --eval_mode rcnn --eval_all
 ```
 
 * To generate the results on the *test* split, please modify the `TEST.SPLIT=TEST` and add the `--test` argument. 
+```
+python eval_rcnn.py --cfg_file cfgs/default.yaml --ckpt ../output/rcnn/default/ckpt/checkpoint_epoch_30.pth --batch_size 1 --eval_mode rcnn_offline
+--rcnn_eval_roi_dir ../output/rpn/default/eval/epoch_200/val/detections/data --rcnn_eval_feature_dir ../output/rpn/default/eval/epoch_200/val/features
+```
 
 Here you could specify a bigger `--batch_size` for faster inference based on your GPU memory. Note that the `--eval_mode` argument should be consistent with the `--train_mode` used in the training process. If you are using `--eval_mode=rcnn_offline`, then you should use `--rcnn_eval_roi_dir` and `--rcnn_eval_feature_dir` to specify the saved features and proposals of the validation set. Please refer to the training section for more details. 
 
+(# --eval_mode を　--eval_mode rcnn_offline にし、　--rcnn_eval_roi_dir　(学習時に保存したdetections ファイルのパス)  --rcnn_eval_feature_dir (学習時に保存した features ファイルのパス)を追加する)
 
 
 
@@ -170,6 +175,18 @@ For the offline GT sampling augmentation, the default setting to train the RCNN 
 
 All the codes supported **mutiple GPUs**, simply add the `--mgpus` argument as above. And you could also increase the `--batch_size` by using multiple GPUs for training.
 
+
+
+## Tensorboard 手順 ##
+
+* loss, 学習率など　(PointRCNN/tools ディレクトリにいるとき)
+```tensorboard --logdir ../output/rpn/default/tensorboard```
+```tensorboard --logdir ../output/rcnn/default/tensorboard```
+
+* ネットワークモデル (PointRCNN/tools ディレクトリにいるとき)
+```tensorboard --logdir ./backbone_net_def```
+backbone_net_def, backbone_net_Mish, backbone_net_FReLU, backbone_net_se, backbone_net_se_Mish
+rpn_cls_layer, rpn_cls_layer_Mish, rpn_reg_layer, rpn_reg_layer_Mishなど
 
 
 
