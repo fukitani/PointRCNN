@@ -34,6 +34,8 @@ All the codes are tested in the following environment:
 * Python 3.6+
 * PyTorch 1.0
 
+
+
 ### Install PointRCNN 
 
 a. Clone the PointRCNN repository.
@@ -51,6 +53,8 @@ c. Build and install the `pointnet2_lib`, `iou3d`, `roipool3d` libraries by exec
 ```shell
 sh build_and_install.sh
 ```
+
+
 
 ## Dataset preparation
 Please download the official [KITTI 3D object detection](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) dataset and organize the downloaded files as follows: 
@@ -71,6 +75,8 @@ PointRCNN
 Here the images are only used for visualization and the [road planes](https://drive.google.com/file/d/1d5mq0RXRnvHPVeKx6Q612z0YRO1t2wAp/view?usp=sharing) are optional for data augmentation in the training. 
 
 
+
+
 ## Pretrained model
 You could download the pretrained model(Car) of PointRCNN from [here(~15MB)](https://drive.google.com/file/d/1aapMXBkSn5c5hNTDdRNI74Ptxfny7PuC/view?usp=sharing), which is trained on the *train* split (3712 samples) and evaluated on the *val* split (3769 samples) and *test* split (7518 samples). The performance on validation set is as follows:
 ```
@@ -86,10 +92,11 @@ You could run the following command to evaluate the pretrained model (set `RPN.L
 python eval_rcnn.py --cfg_file cfgs/default.yaml --ckpt PointRCNN.pth --batch_size 1 --eval_mode rcnn --set RPN.LOC_XZ_FINE False
 ```
 
-## Inference
+
+## Inference (推論)
 * To evaluate a single checkpoint, run the following command with `--ckpt` to specify the checkpoint to be evaluated:
 ```
-python eval_rcnn.py --cfg_file cfgs/default.yaml --ckpt ../output/rpn/ckpt/checkpoint_epoch_200.pth --batch_size 4 --eval_mode rcnn 
+python eval_rcnn.py --cfg_file cfgs/default.yaml --ckpt ../output/rcnn/default/ckpt/checkpoint_epoch_70.pth --batch_size 4 --eval_mode rcnn 
 ```
 
 * To evaluate all the checkpoints of a specific training config file, add the `--eval_all` argument, and run the command as follows:
@@ -101,17 +108,21 @@ python eval_rcnn.py --cfg_file cfgs/default.yaml --eval_mode rcnn --eval_all
 
 Here you could specify a bigger `--batch_size` for faster inference based on your GPU memory. Note that the `--eval_mode` argument should be consistent with the `--train_mode` used in the training process. If you are using `--eval_mode=rcnn_offline`, then you should use `--rcnn_eval_roi_dir` and `--rcnn_eval_feature_dir` to specify the saved features and proposals of the validation set. Please refer to the training section for more details. 
 
-## Training
+
+
+
+## Training (学習)
 Currently, the two stages of PointRCNN are trained separately. Firstly, to use the ground truth sampling data augmentation for training, we should generate the ground truth database as follows:
 ```
 python generate_gt_database.py --class_name 'Car' --split train
 ```
 
-### Training of RPN stage
-* To train the first proposal generation stage of PointRCNN with a single GPU, run the following command:
+### Training of RPN stage (1st stage)
+* To train the first proposal generation stage of PointRCNN with a **single GPU**, run the following command:
 ```
-python train_rcnn.py --cfg_file cfgs/default.yaml --batch_size 16 --train_mode rpn --epochs 200
+python train_rcnn.py --cfg_file cfgs/default.yaml --batch_size 8 --train_mode rpn --epochs 200
 ```
+'本家は batch_size 16'
 
 * To use **mutiple GPUs for training**, simply add the `--mgpus` argument as follows:
 ```
@@ -124,14 +135,17 @@ PointRCNN/output/rpn/default/
 ```
 which will be used for the training of RCNN stage. 
 
-### Training of RCNN stage
+
+### Training of RCNN stage (2nd stage)
 Suppose you have a well-trained RPN model saved at `output/rpn/default/ckpt/checkpoint_epoch_200.pth`, 
 then there are two strategies to train the second stage of PointRCNN. 
 
+## オンライン学習##
 (a) Train RCNN network with fixed RPN network to use online GT augmentation: Use `--rpn_ckpt` to specify the path of a well-trained RPN model and run the command as follows:
 ```
 python train_rcnn.py --cfg_file cfgs/default.yaml --batch_size 4 --train_mode rcnn --epochs 70  --ckpt_save_interval 2 --rpn_ckpt ../output/rpn/default/ckpt/checkpoint_epoch_200.pth
 ```
+## オフライン学習##
 (b) Train RCNN network with offline GT augmentation: 
 1. Generate the augmented offline scenes by running the following command:
 ```
@@ -156,6 +170,9 @@ For the offline GT sampling augmentation, the default setting to train the RCNN 
 
 All the codes supported **mutiple GPUs**, simply add the `--mgpus` argument as above. And you could also increase the `--batch_size` by using multiple GPUs for training.
 
+
+
+
 **Note**: 
 * The strategy (a), online augmentation, is more elegant and easy to train.
 * The best model is trained by the offline augmentation strategy with CPU proposal sampling (set `RCNN.ROI_SAMPLE_JIT=False`). 
@@ -172,4 +189,5 @@ If you find this work useful in your research, please consider cite:
     month = {June},
     year = {2019}
 }
-```
+
+
